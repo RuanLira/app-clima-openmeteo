@@ -23,9 +23,10 @@
       <form id="searchForm" class="search" autocomplete="off">
         <label for="cityInput">Cidade</label>
         <div class="search-row">
-          <input id="cityInput" type="search" placeholder="Ex: Mesquita" required>
+          <input id="cityInput" type="search" placeholder="Ex: Campo Grande" required>
           <button type="submit">Buscar</button>
         </div>
+        <div id="suggestions" class="suggestions hidden" role="listbox" aria-label="Sugestoes de cidades"></div>
       </form>
 
       <div class="unit-control" aria-label="Unidade de temperatura">
@@ -50,22 +51,23 @@
       <section id="weatherResult" class="result hidden" aria-live="polite">
         <div class="current">
           <div class="current-info">
-            <span id="weatherIcon" class="weather-icon" aria-hidden="true">☀</span>
+            <span id="weatherIcon" class="weather-icon weather-icon--sun" aria-hidden="true"></span>
             <div>
               <p id="locationName" class="location">Sao Paulo, Brasil</p>
               <p id="weatherDescription" class="description">Parcialmente nublado</p>
+              <a id="mapLink" class="map-link" href="#" target="_blank" rel="noreferrer">Ver no mapa</a>
             </div>
           </div>
           <div class="temperature">
             <span id="temperature">24</span>
-            <span aria-label="graus Celsius">&deg;C</span>
+            <span aria-label="graus Celsius">C</span>
           </div>
         </div>
 
         <div class="details">
           <article>
             <span>Sensacao</span>
-            <strong id="apparentTemperature">25 &deg;C</strong>
+            <strong id="apparentTemperature">25 C</strong>
           </article>
           <article>
             <span>Umidade</span>
@@ -90,7 +92,10 @@
       <section class="recent">
         <div class="recent-header">
           <h2>Buscas recentes</h2>
-          <button id="clearRecentButton" type="button">Limpar</button>
+          <div class="recent-actions">
+            <button id="clearRecentButton" type="button">Limpar recentes</button>
+            <button id="clearCacheButton" type="button">Limpar cache</button>
+          </div>
         </div>
         <ul id="recentList"></ul>
       </section>

@@ -36,12 +36,14 @@
     <form id="searchForm">
       <input id="cityInput">
     </form>
+    <div id="suggestions"></div>
     <p id="message"></p>
     <section id="cityOptions"><ul id="cityOptionsList"></ul></section>
     <section id="weatherResult"></section>
     <p id="locationName"></p>
     <p id="weatherDescription"></p>
     <span id="weatherIcon"></span>
+    <a id="mapLink"></a>
     <span id="temperature"></span>
     <span class="temperature"><span></span><span></span></span>
     <strong id="apparentTemperature"></strong>
@@ -51,6 +53,7 @@
     <div id="forecastList"></div>
     <ul id="recentList"></ul>
     <button id="clearRecentButton"></button>
+    <button id="clearCacheButton"></button>
     <button id="locationButton"></button>
     <button id="themeButton"></button>
     <input type="radio" name="temperatureUnit" value="celsius">
@@ -94,6 +97,12 @@
 
     test("classifica codigo de chuva", () => {
       expectEqual(getWeatherIcon(61), "Chuva");
+    });
+
+    test("aplica classe visual de chuva", () => {
+      const icon = document.createElement("span");
+      setWeatherIcon(icon, 61);
+      expectEqual(icon.className.includes("weather-icon--rain"), true);
     });
 
     test("remove cidades duplicadas", () => {
