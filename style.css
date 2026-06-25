@@ -217,6 +217,12 @@ h1 {
   background: transparent;
 }
 
+.suggestions button[data-action="full-search"] {
+  border-color: rgba(var(--accent-rgb), 0.28);
+  background: rgba(var(--accent-rgb), 0.07);
+  color: var(--accent-dark);
+}
+
 .suggestions span {
   display: block;
   margin-top: 4px;

@@ -6,6 +6,7 @@ Um aplicativo de clima feito com HTML, CSS e JavaScript. O projeto usa a API da 
 
 - Buscar clima atual por cidade
 - Mostrar sugestoes de cidades enquanto o usuario digita
+- Oferecer busca exata quando o usuario digita bairro, cidade e estado
 - Mostrar opcoes quando existem cidades, bairros ou localidades com nomes parecidos
 - Exibir temperatura, sensacao termica, umidade e vento
 - Mostrar descricao e icone visual da condicao do tempo
@@ -44,7 +45,7 @@ O projeto usa a Open-Meteo e uma busca complementar com OpenStreetMap/Nominatim:
 2. Nominatim Search API: complementa resultados somente quando a busca e confirmada, ajudando a encontrar bairros e localidades que podem nao aparecer na Open-Meteo.
 3. Forecast API: usa latitude e longitude para buscar clima atual e previsao diaria.
 
-Importante: a busca complementar por Nominatim deve respeitar a politica de uso do OpenStreetMap. Este projeto nao usa Nominatim como autocomplete; as sugestoes enquanto digita usam Open-Meteo. O Nominatim entra apenas quando o usuario confirma a busca, e os resultados ficam em cache local para reduzir requisicoes repetidas.
+Importante: a busca complementar por Nominatim deve respeitar a politica de uso do OpenStreetMap. Este projeto nao usa Nominatim como autocomplete; as sugestoes enquanto digita usam Open-Meteo. Quando a pessoa digita algo especifico, como `Campo Grande, Rio de Janeiro`, a previa oferece uma busca exata e o Nominatim entra apenas depois dessa confirmacao. Os resultados ficam em cache local para reduzir requisicoes repetidas.
 
 ## Proximas melhorias
 

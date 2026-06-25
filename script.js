@@ -234,12 +234,34 @@ function renderCityOptions(cities) {
   cityOptions.classList.remove("hidden");
 }
 
-function renderSuggestions(cities) {
+function renderExactSearchSuggestion(query, helperText = "Busca completa por bairros, cidades e localidades") {
+  const button = document.createElement("button");
+  const details = document.createElement("span");
+
+  button.type = "button";
+  button.dataset.action = "full-search";
+  button.dataset.query = query;
+  button.textContent = `Buscar "${query}"`;
+  details.textContent = helperText;
+
+  button.appendChild(details);
+  suggestions.appendChild(button);
+}
+
+function renderSuggestions(cities, query = "") {
   suggestions.innerHTML = "";
   suggestionResults = cities;
+  const cleanedQuery = query.trim();
+  const shouldShowExactSearch = cleanedQuery.length >= 3;
 
-  if (cities.length === 0) {
+  if (cities.length === 0 && !shouldShowExactSearch) {
     suggestions.classList.add("hidden");
+    return;
+  }
+
+  if (cleanedQuery.includes(",")) {
+    renderExactSearchSuggestion(cleanedQuery, "Melhor para bairro, estado ou cidade com nome repetido");
+    suggestions.classList.remove("hidden");
     return;
   }
 
@@ -255,6 +277,10 @@ function renderSuggestions(cities) {
     button.appendChild(details);
     suggestions.appendChild(button);
   });
+
+  if (shouldShowExactSearch) {
+    renderExactSearchSuggestion(cleanedQuery);
+  }
 
   suggestions.classList.remove("hidden");
 }
@@ -413,7 +439,12 @@ async function searchSuggestions(city) {
   suggestionRequestId = requestId;
 
   if (cleanedCity.length < 3) {
-    renderSuggestions([]);
+    renderSuggestions([], cleanedCity);
+    return;
+  }
+
+  if (cleanedCity.includes(",")) {
+    renderSuggestions([], cleanedCity);
     return;
   }
 
@@ -423,7 +454,7 @@ async function searchSuggestions(city) {
     return;
   }
 
-  renderSuggestions(removeDuplicateCities(cities).slice(0, 6));
+  renderSuggestions(removeDuplicateCities(cities).slice(0, 6), cleanedCity);
 }
 
 async function searchCities(city) {
@@ -516,6 +547,13 @@ cityInput.addEventListener("input", () => {
 suggestions.addEventListener("click", (event) => {
   const button = event.target.closest("button");
   if (!button) return;
+
+  if (button.dataset.action === "full-search") {
+    cityInput.value = button.dataset.query;
+    suggestions.classList.add("hidden");
+    searchCities(button.dataset.query);
+    return;
+  }
 
   const city = suggestionResults[Number(button.dataset.index)];
   cityInput.value = city.name;
