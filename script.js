@@ -236,15 +236,16 @@ function renderCityOptions(cities) {
 
 function renderExactSearchSuggestion(query, helperText = "Busca completa por bairros, cidades e localidades") {
   const button = document.createElement("button");
+  const title = document.createElement("strong");
   const details = document.createElement("span");
 
   button.type = "button";
   button.dataset.action = "full-search";
   button.dataset.query = query;
-  button.textContent = `Buscar "${query}"`;
+  title.textContent = `Buscar "${query}"`;
   details.textContent = helperText;
 
-  button.appendChild(details);
+  button.append(title, details);
   suggestions.appendChild(button);
 }
 
@@ -267,14 +268,15 @@ function renderSuggestions(cities, query = "") {
 
   cities.slice(0, 6).forEach((city, index) => {
     const button = document.createElement("button");
+    const title = document.createElement("strong");
     const details = document.createElement("span");
 
     button.type = "button";
     button.dataset.index = index;
-    button.textContent = city.name;
+    title.textContent = city.name;
     details.textContent = `${city.admin1 || "Regiao nao informada"}, ${city.country || "Pais nao informado"}`;
 
-    button.appendChild(details);
+    button.append(title, details);
     suggestions.appendChild(button);
   });
 
