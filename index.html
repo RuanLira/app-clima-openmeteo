@@ -3,44 +3,57 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>App Clima</title>
+  <title>App Clima Open-Meteo</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main class="app">
     <section class="weather-panel" aria-labelledby="app-title">
+      <div class="top-actions">
+        <button id="locationButton" class="secondary-button" type="button">Usar minha localizacao</button>
+        <button id="themeButton" class="secondary-button" type="button">Tema escuro</button>
+      </div>
+
       <header class="hero">
-        <p class="eyebrow">Previsao atual</p>
+        <p class="eyebrow">Open-Meteo API</p>
         <h1 id="app-title">App Clima</h1>
-        <p>Busque uma cidade para ver temperatura, sensacao termica, vento e condicao do tempo.</p>
+        <p>Busque uma cidade, escolha a localidade correta e veja o clima atual com previsao dos proximos dias.</p>
       </header>
 
       <form id="searchForm" class="search" autocomplete="off">
         <label for="cityInput">Cidade</label>
         <div class="search-row">
-          <input id="cityInput" type="search" placeholder="Ex: Sao Paulo" required>
+          <input id="cityInput" type="search" placeholder="Ex: Mesquita" required>
           <button type="submit">Buscar</button>
         </div>
       </form>
 
       <p id="message" class="message" role="status" aria-live="polite"></p>
 
+      <section id="cityOptions" class="city-options hidden" aria-labelledby="city-options-title">
+        <h2 id="city-options-title">Escolha a cidade correta</h2>
+        <ul id="cityOptionsList"></ul>
+      </section>
+
       <section id="weatherResult" class="result hidden" aria-live="polite">
         <div class="current">
-          <div>
-            <p id="locationName" class="location">Sao Paulo, Brasil</p>
-            <p id="weatherDescription" class="description">Parcialmente nublado</p>
+          <div class="current-info">
+            <span id="weatherIcon" class="weather-icon" aria-hidden="true">☀</span>
+            <div>
+              <p id="locationName" class="location">Sao Paulo, Brasil</p>
+              <p id="weatherDescription" class="description">Parcialmente nublado</p>
+            </div>
           </div>
           <div class="temperature">
             <span id="temperature">24</span>
-            <span aria-label="graus Celsius">°C</span>
+            <span aria-label="graus Celsius">&deg;C</span>
           </div>
         </div>
 
         <div class="details">
           <article>
             <span>Sensacao</span>
-            <strong id="apparentTemperature">25 °C</strong>
+            <strong id="apparentTemperature">25 &deg;C</strong>
           </article>
           <article>
             <span>Umidade</span>
@@ -55,6 +68,11 @@
             <strong id="updatedAt">10:30</strong>
           </article>
         </div>
+
+        <section class="forecast" aria-labelledby="forecast-title">
+          <h2 id="forecast-title">Proximos dias</h2>
+          <div id="forecastList" class="forecast-list"></div>
+        </section>
       </section>
 
       <section class="recent">
