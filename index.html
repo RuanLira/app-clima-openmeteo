@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>App Clima</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <section class="weather-panel" aria-labelledby="app-title">
+      <header class="hero">
+        <p class="eyebrow">Previsao atual</p>
+        <h1 id="app-title">App Clima</h1>
+        <p>Busque uma cidade para ver temperatura, sensacao termica, vento e condicao do tempo.</p>
+      </header>
+
+      <form id="searchForm" class="search" autocomplete="off">
+        <label for="cityInput">Cidade</label>
+        <div class="search-row">
+          <input id="cityInput" type="search" placeholder="Ex: Sao Paulo" required>
+          <button type="submit">Buscar</button>
+        </div>
+      </form>
+
+      <p id="message" class="message" role="status" aria-live="polite"></p>
+
+      <section id="weatherResult" class="result hidden" aria-live="polite">
+        <div class="current">
+          <div>
+            <p id="locationName" class="location">Sao Paulo, Brasil</p>
+            <p id="weatherDescription" class="description">Parcialmente nublado</p>
+          </div>
+          <div class="temperature">
+            <span id="temperature">24</span>
+            <span aria-label="graus Celsius">°C</span>
+          </div>
+        </div>
+
+        <div class="details">
+          <article>
+            <span>Sensacao</span>
+            <strong id="apparentTemperature">25 °C</strong>
+          </article>
+          <article>
+            <span>Umidade</span>
+            <strong id="humidity">66%</strong>
+          </article>
+          <article>
+            <span>Vento</span>
+            <strong id="wind">13 km/h</strong>
+          </article>
+          <article>
+            <span>Atualizado</span>
+            <strong id="updatedAt">10:30</strong>
+          </article>
+        </div>
+      </section>
+
+      <section class="recent">
+        <div class="recent-header">
+          <h2>Buscas recentes</h2>
+          <button id="clearRecentButton" type="button">Limpar</button>
+        </div>
+        <ul id="recentList"></ul>
+      </section>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
