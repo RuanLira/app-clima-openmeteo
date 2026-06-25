@@ -28,6 +28,18 @@
         </div>
       </form>
 
+      <div class="unit-control" aria-label="Unidade de temperatura">
+        <span>Temperatura</span>
+        <label>
+          <input type="radio" name="temperatureUnit" value="celsius" checked>
+          Celsius
+        </label>
+        <label>
+          <input type="radio" name="temperatureUnit" value="fahrenheit">
+          Fahrenheit
+        </label>
+      </div>
+
       <p id="message" class="message" role="status" aria-live="polite"></p>
 
       <section id="cityOptions" class="city-options hidden" aria-labelledby="city-options-title">
@@ -82,6 +94,10 @@
         </div>
         <ul id="recentList"></ul>
       </section>
+
+      <p class="attribution">
+        Dados de clima por Open-Meteo. Busca complementar por OpenStreetMap/Nominatim.
+      </p>
     </section>
   </main>
 

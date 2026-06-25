@@ -17,11 +17,19 @@ const recentList = document.querySelector("#recentList");
 const clearRecentButton = document.querySelector("#clearRecentButton");
 const locationButton = document.querySelector("#locationButton");
 const themeButton = document.querySelector("#themeButton");
+const unitInputs = document.querySelectorAll("input[name='temperatureUnit']");
 
 const recentStorageKey = "weatherRecentSearches";
 const themeStorageKey = "weatherTheme";
+const unitStorageKey = "weatherTemperatureUnit";
+const geocodingCacheKey = "weatherGeocodingCache";
+
 let recentSearches = JSON.parse(localStorage.getItem(recentStorageKey)) || [];
+let geocodingCache = JSON.parse(localStorage.getItem(geocodingCacheKey)) || {};
 let cityResults = [];
+let currentCity = null;
+let currentWeather = null;
+let temperatureUnit = localStorage.getItem(unitStorageKey) || "celsius";
 
 const weatherDescriptions = {
   0: "Ceu limpo",
@@ -48,13 +56,13 @@ const weatherDescriptions = {
 };
 
 function getWeatherIcon(code) {
-  if (code === 0) return "☀";
-  if ([1, 2].includes(code)) return "◐";
-  if ([3, 45, 48].includes(code)) return "☁";
-  if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) return "☂";
-  if ([71, 73, 75].includes(code)) return "❄";
-  if ([95, 96, 99].includes(code)) return "⚡";
-  return "◌";
+  if (code === 0) return "Sol";
+  if ([1, 2].includes(code)) return "Claro";
+  if ([3, 45, 48].includes(code)) return "Nuvens";
+  if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) return "Chuva";
+  if ([71, 73, 75].includes(code)) return "Neve";
+  if ([95, 96, 99].includes(code)) return "Raio";
+  return "Clima";
 }
 
 function showMessage(text, isError = false) {
@@ -77,20 +85,74 @@ function formatDay(dateText) {
   }).format(new Date(`${dateText}T12:00:00`));
 }
 
+function formatTemperature(value) {
+  if (temperatureUnit === "fahrenheit") {
+    return `${Math.round((value * 9) / 5 + 32)} F`;
+  }
+
+  return `${Math.round(value)} C`;
+}
+
 function formatCityName(city) {
   const region = city.admin1 ? `${city.admin1}, ` : "";
   const country = city.country || "Pais nao informado";
   return `${city.name}, ${region}${country}`;
 }
 
-function saveRecentSearch(city) {
-  const recentCity = {
+function normalizeCity(city) {
+  return {
     name: city.name,
     admin1: city.admin1 || "",
     country: city.country || "",
-    latitude: city.latitude,
-    longitude: city.longitude,
+    latitude: Number(city.latitude),
+    longitude: Number(city.longitude),
+    source: city.source || "open-meteo",
   };
+}
+
+function normalizeNominatimPlace(place) {
+  const address = place.address || {};
+  const name = place.name
+    || address.suburb
+    || address.neighbourhood
+    || address.city
+    || address.town
+    || address.village
+    || place.display_name.split(",")[0];
+
+  return normalizeCity({
+    name,
+    admin1: address.state || address.city || address.county || "",
+    country: address.country || "",
+    latitude: place.lat,
+    longitude: place.lon,
+    source: "nominatim",
+  });
+}
+
+function removeDuplicateCities(cities) {
+  const uniqueCities = new Map();
+
+  cities.forEach((city) => {
+    const normalized = normalizeCity(city);
+    const key = [
+      normalized.name.toLowerCase(),
+      normalized.admin1.toLowerCase(),
+      normalized.country.toLowerCase(),
+      normalized.latitude.toFixed(2),
+      normalized.longitude.toFixed(2),
+    ].join("|");
+
+    if (!uniqueCities.has(key)) {
+      uniqueCities.set(key, normalized);
+    }
+  });
+
+  return [...uniqueCities.values()];
+}
+
+function saveRecentSearch(city) {
+  const recentCity = normalizeCity(city);
 
   recentSearches = [
     recentCity,
@@ -149,25 +211,65 @@ function renderCityOptions(cities) {
 }
 
 async function getCityOptions(city) {
+  const cacheKey = city.toLowerCase();
+
+  if (geocodingCache[cacheKey]) {
+    return geocodingCache[cacheKey];
+  }
+
+  const [openMeteoCities, nominatimCities] = await Promise.all([
+    getOpenMeteoCityOptions(city),
+    getNominatimCityOptions(city),
+  ]);
+
+  const cities = removeDuplicateCities([...openMeteoCities, ...nominatimCities])
+    .sort((first, second) => first.name.localeCompare(second.name, "pt-BR"));
+
+  if (cities.length === 0) {
+    throw new Error("Cidade nao encontrada.");
+  }
+
+  geocodingCache[cacheKey] = cities;
+  localStorage.setItem(geocodingCacheKey, JSON.stringify(geocodingCache));
+
+  return cities;
+}
+
+async function getOpenMeteoCityOptions(city) {
   const url = new URL("https://geocoding-api.open-meteo.com/v1/search");
   url.searchParams.set("name", city);
-  url.searchParams.set("count", "10");
+  url.searchParams.set("count", "50");
   url.searchParams.set("language", "pt");
   url.searchParams.set("format", "json");
 
   const response = await fetch(url);
 
   if (!response.ok) {
-    throw new Error("Nao foi possivel buscar a cidade.");
+    return [];
   }
 
   const data = await response.json();
+  return data.results || [];
+}
 
-  if (!data.results || data.results.length === 0) {
-    throw new Error("Cidade nao encontrada.");
+async function getNominatimCityOptions(city) {
+  const url = new URL("https://nominatim.openstreetmap.org/search");
+  url.searchParams.set("q", city);
+  url.searchParams.set("format", "jsonv2");
+  url.searchParams.set("addressdetails", "1");
+  url.searchParams.set("limit", "20");
+  url.searchParams.set("countrycodes", "br");
+  url.searchParams.set("accept-language", "pt-BR");
+  url.searchParams.set("featureType", "settlement");
+
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    return [];
   }
 
-  return data.results;
+  const data = await response.json();
+  return data.map(normalizeNominatimPlace);
 }
 
 async function getWeather({ latitude, longitude }) {
@@ -185,6 +287,7 @@ async function getWeather({ latitude, longitude }) {
     "weather_code",
     "temperature_2m_max",
     "temperature_2m_min",
+    "precipitation_probability_max",
   ].join(","));
   url.searchParams.set("forecast_days", "4");
   url.searchParams.set("timezone", "auto");
@@ -206,14 +309,16 @@ function renderForecast(daily) {
     const dayText = document.createElement("span");
     const icon = document.createElement("strong");
     const temperatureText = document.createElement("strong");
+    const rainText = document.createElement("span");
 
     card.className = "forecast-card";
     icon.className = "forecast-icon";
     dayText.textContent = index === 0 ? "Hoje" : formatDay(day);
     icon.textContent = getWeatherIcon(daily.weather_code[index]);
-    temperatureText.textContent = `${Math.round(daily.temperature_2m_min[index])} / ${Math.round(daily.temperature_2m_max[index])} C`;
+    temperatureText.textContent = `${formatTemperature(daily.temperature_2m_min[index])} / ${formatTemperature(daily.temperature_2m_max[index])}`;
+    rainText.textContent = `Chuva: ${daily.precipitation_probability_max[index] ?? 0}%`;
 
-    card.append(dayText, icon, temperatureText);
+    card.append(dayText, icon, temperatureText, rainText);
     forecastList.appendChild(card);
   });
 }
@@ -224,8 +329,9 @@ function showWeather(city, weather) {
   locationName.textContent = formatCityName(city);
   weatherDescription.textContent = weatherDescriptions[current.weather_code] || "Condicao nao informada";
   weatherIcon.textContent = getWeatherIcon(current.weather_code);
-  temperature.textContent = Math.round(current.temperature_2m);
-  apparentTemperature.textContent = `${Math.round(current.apparent_temperature)} C`;
+  temperature.textContent = formatTemperature(current.temperature_2m).replace(" C", "").replace(" F", "");
+  document.querySelector(".temperature span:last-child").textContent = temperatureUnit === "fahrenheit" ? "F" : "C";
+  apparentTemperature.textContent = formatTemperature(current.apparent_temperature);
   humidity.textContent = `${current.relative_humidity_2m}%`;
   wind.textContent = `${Math.round(current.wind_speed_10m)} km/h`;
   updatedAt.textContent = formatTime(current.time);
@@ -238,10 +344,13 @@ async function selectCity(city) {
     showMessage("Buscando clima...");
     weatherResult.classList.add("hidden");
 
-    const weatherData = await getWeather(city);
+    const normalizedCity = normalizeCity(city);
+    const weatherData = await getWeather(normalizedCity);
 
-    showWeather(city, weatherData);
-    saveRecentSearch(city);
+    currentCity = normalizedCity;
+    currentWeather = weatherData;
+    showWeather(normalizedCity, weatherData);
+    saveRecentSearch(normalizedCity);
     cityOptions.classList.add("hidden");
     showMessage("Clima atualizado.");
   } catch (error) {
@@ -280,6 +389,19 @@ function applyTheme(theme) {
   const isDark = theme === "dark";
   document.body.classList.toggle("dark", isDark);
   themeButton.textContent = isDark ? "Tema claro" : "Tema escuro";
+}
+
+function applyTemperatureUnit(unit) {
+  temperatureUnit = unit;
+  localStorage.setItem(unitStorageKey, unit);
+
+  unitInputs.forEach((input) => {
+    input.checked = input.value === unit;
+  });
+
+  if (currentCity && currentWeather) {
+    showWeather(currentCity, currentWeather);
+  }
 }
 
 function getCurrentPosition() {
@@ -324,9 +446,10 @@ cityOptionsList.addEventListener("click", (event) => {
 });
 
 recentList.addEventListener("click", (event) => {
-  if (!event.target.dataset.index) return;
+  const button = event.target.closest("button");
+  if (!button) return;
 
-  const city = recentSearches[Number(event.target.dataset.index)];
+  const city = recentSearches[Number(button.dataset.index)];
   cityInput.value = city.name;
   selectCity(city);
 });
@@ -346,5 +469,12 @@ themeButton.addEventListener("click", () => {
 
 locationButton.addEventListener("click", searchByCurrentLocation);
 
+unitInputs.forEach((input) => {
+  input.addEventListener("change", () => {
+    applyTemperatureUnit(input.value);
+  });
+});
+
 applyTheme(localStorage.getItem(themeStorageKey) || "light");
+applyTemperatureUnit(temperatureUnit);
 renderRecentSearches();

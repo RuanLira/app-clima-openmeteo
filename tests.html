@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Testes - App Clima</title>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 32px;
+      color: #182230;
+    }
+
+    .hidden-fixture {
+      display: none;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    .pass {
+      color: #15803d;
+    }
+
+    .fail {
+      color: #b42318;
+    }
+  </style>
+</head>
+<body>
+  <h1>Testes do App Clima</h1>
+  <ul id="testResults"></ul>
+
+  <div class="hidden-fixture">
+    <form id="searchForm">
+      <input id="cityInput">
+    </form>
+    <p id="message"></p>
+    <section id="cityOptions"><ul id="cityOptionsList"></ul></section>
+    <section id="weatherResult"></section>
+    <p id="locationName"></p>
+    <p id="weatherDescription"></p>
+    <span id="weatherIcon"></span>
+    <span id="temperature"></span>
+    <span class="temperature"><span></span><span></span></span>
+    <strong id="apparentTemperature"></strong>
+    <strong id="humidity"></strong>
+    <strong id="wind"></strong>
+    <strong id="updatedAt"></strong>
+    <div id="forecastList"></div>
+    <ul id="recentList"></ul>
+    <button id="clearRecentButton"></button>
+    <button id="locationButton"></button>
+    <button id="themeButton"></button>
+    <input type="radio" name="temperatureUnit" value="celsius">
+    <input type="radio" name="temperatureUnit" value="fahrenheit">
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    const testResults = document.querySelector("#testResults");
+
+    function test(description, callback) {
+      const item = document.createElement("li");
+
+      try {
+        callback();
+        item.className = "pass";
+        item.textContent = `OK - ${description}`;
+      } catch (error) {
+        item.className = "fail";
+        item.textContent = `ERRO - ${description}: ${error.message}`;
+      }
+
+      testResults.appendChild(item);
+    }
+
+    function expectEqual(received, expected) {
+      if (received !== expected) {
+        throw new Error(`esperado ${expected}, recebido ${received}`);
+      }
+    }
+
+    test("converte Celsius para Fahrenheit", () => {
+      applyTemperatureUnit("fahrenheit");
+      expectEqual(formatTemperature(20), "68 F");
+    });
+
+    test("mantem Celsius quando unidade escolhida e Celsius", () => {
+      applyTemperatureUnit("celsius");
+      expectEqual(formatTemperature(20), "20 C");
+    });
+
+    test("classifica codigo de chuva", () => {
+      expectEqual(getWeatherIcon(61), "Chuva");
+    });
+
+    test("remove cidades duplicadas", () => {
+      const cities = removeDuplicateCities([
+        { name: "Mesquita", admin1: "Rio de Janeiro", country: "Brasil", latitude: -22.78, longitude: -43.42 },
+        { name: "Mesquita", admin1: "Rio de Janeiro", country: "Brasil", latitude: -22.78, longitude: -43.42 },
+      ]);
+
+      expectEqual(cities.length, 1);
+    });
+  </script>
+</body>
+</html>
